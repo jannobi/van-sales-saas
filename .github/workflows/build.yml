@@ -23,13 +23,12 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Build Android Platform
+      - name: Non-Interactive Capacitor Android Setup
         run: |
-          npm init -y --yes
-          npm install @capacitor/core @capacitor/android
-          npm install -D @capacitor/cli
-          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir .
-          npx cap add android
+          npm init -y
+          npm install @capacitor/core @capacitor/android @capacitor/cli
+          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir . --no-interactive
+          npx cap add android --no-interactive || true
           npx cap sync android
 
       - name: Build Release Bundle
