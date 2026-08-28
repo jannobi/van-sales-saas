@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Prepare Dummy Web Assets & Setup Capacitor
+      - name: Prepare Web Assets & Setup Capacitor
         run: |
           mkdir -p www
           cp index.html www/ 2>/dev/null || echo "<html><body>Vyapar Van</body></html>" > www/index.html
@@ -31,6 +31,19 @@ jobs:
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir www
           npx cap add android || true
+          
+          # Force fix for Kotlin duplicate class conflicts in build.gradle
+          echo "
+          android {
+              configurations.all {
+                  resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+                      if (details.requested.group == 'org.jetbrains.kotlin') {
+                          details.useVersion '1.9.24'
+                      }
+                  }
+              }
+          }" >> android/app/build.gradle
+
           npx cap sync android
 
       - name: Build Release Bundle
