@@ -3,290 +3,326 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vyapar SaaS Van Distribution</title>
+  <title>Vyapar Enterprise Van SaaS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100">
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    const printThermalReceipt = async (invoiceData) => {
-      try {
-        if (!navigator.bluetooth) {
-          alert("Web Bluetooth API is not supported on this browser.");
-          return;
-        }
-        const device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2']
-        });
-        const server = await device.gatt.connect();
-        const services = await server.getPrimaryServices();
-        let writeCharacteristic = null;
+    // Helper to generate or fetch unique Device Binding ID
+    const getDeviceId = () => {
+      let devId = localStorage.getItem('van_saas_device_id');
+      if (!devId) {
+        devId = 'DEV-VAN-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+        localStorage.setItem('van_saas_device_id', devId);
+      }
+      return devId;
+    };
 
-        for (const service of services) {
-          const characteristics = await service.getCharacteristics();
-          for (const char of characteristics) {
-            if (char.properties.write || char.properties.writeWithoutResponse) {
-              writeCharacteristic = char;
-              break;
-            }
-          }
-          if (writeCharacteristic) break;
-        }
-
-        if (!writeCharacteristic) {
-          alert("Could not find printer write characteristic.");
-          return;
-        }
-
-        const encoder = new TextEncoder();
-        let commands = [];
-        commands.push(0x1B, 0x40);
-        commands.push(0x1B, 0x61, 0x01);
-        commands.push(0x1B, 0x45, 0x01);
-        commands.push(...encoder.encode(`${invoiceData.companyName}\n`));
-        commands.push(0x1B, 0x45, 0x00);
-        commands.push(...encoder.encode(`Invoice: #${invoiceData.id}\n`));
-        commands.push(...encoder.encode(`Date: ${new Date().toLocaleDateString()}\n`));
-        commands.push(...encoder.encode("--------------------------------\n"));
-
-        commands.push(0x1B, 0x61, 0x00);
-        invoiceData.items.forEach(item => {
-          commands.push(...encoder.encode(`${item.name} (${item.unit})\n`));
-          commands.push(...encoder.encode(`  ${item.qty} x ${item.price} = ${item.qty * item.price}\n`));
-        });
-
-        commands.push(...encoder.encode("--------------------------------\n"));
-        commands.push(0x1B, 0x45, 0x01);
-        commands.push(...encoder.encode(`TOTAL: BDT ${invoiceData.total}\n`));
-        commands.push(0x1B, 0x45, 0x00);
-        commands.push(...encoder.encode("Thank You For Shopping!\n\n\n\n"));
-        commands.push(0x1D, 0x56, 0x41, 0x10);
-
-        const dataBuffer = new Uint8Array(commands);
-        await writeCharacteristic.writeValue(dataBuffer);
-        alert("Receipt printed successfully!");
-      } catch (error) {
-        console.error("Bluetooth Print Error:", error);
-        alert("Printing failed: " + error.message);
+    const translations = {
+      BN: {
+        title: "ব্যাপার এন্টারপ্রাইজ ভ্যান সেলস",
+        vanStock: "ভ্যান ইনভেন্টরি স্টক",
+        currentInvoice: "বর্তমান সেলস ইনভয়েস",
+        total: "মোট বিল:",
+        printBtn: "🖨️ ব্লুটুথ প্রিন্ট করুন (58mm)",
+        role: "রোল:",
+        routeSchedule: "আজকের রুট শিডিউল",
+        deviceStatus: "ডিভাইস সিকিউরিটি বাইন্ডিং",
+        approved: "ডিভাইস অনুমোদিত",
+        checkIn: "GPS চেক-ইন",
+        geoVerified: "জিপিএস ভেরিফায়েড",
+        superDashboard: "সুপার এডমিন কন্ট্রোল",
+        deviceLockAlert: "নতুন ডিভাইস সনাক্ত হয়েছে! হাই-সিকিউরিটি প্যানেল থেকে অ্যাডমিন অনুমোদন প্রয়োজন।"
+      },
+      EN: {
+        title: "Vyapar Enterprise Van Sales",
+        vanStock: "Van Inventory Stock",
+        currentInvoice: "Current Sales Invoice",
+        total: "Total Amount:",
+        printBtn: "🖨️ Print via Bluetooth (58mm)",
+        role: "Role:",
+        routeSchedule: "Today's Route Schedule",
+        deviceStatus: "Device Security Binding",
+        approved: "Device Approved",
+        checkIn: "GPS Check-in",
+        geoVerified: "GPS Verified",
+        superDashboard: "Super Admin Control",
+        deviceLockAlert: "New Device Detected! Admin Approval Required via High-Security Panel."
       }
     };
 
-    function MasterPinModal({ correctPin, onSuccess, onClose }) {
-      const [pin, setPin] = useState('');
-      const [error, setError] = useState(false);
-
-      const handleSubmit = (e) => {
-        e.preventDefault();
-        if (pin === correctPin) {
-          setError(false);
-          onSuccess();
-        } else {
-          setError(true);
-          setPin('');
-        }
-      };
-
-      return (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl text-center">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Security Master PIN</h3>
-            <p className="text-sm text-gray-500 mb-4">Enter 4-digit Master PIN to unlock admin actions</p>
-            <form onSubmit={handleSubmit}>
-              <input
-                type="password"
-                maxLength={4}
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                className="w-full text-center text-3xl tracking-widest py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4"
-                placeholder="••••"
-                autoFocus
-              />
-              {error && <p className="text-red-500 text-xs mb-3">Invalid Master PIN. Access Denied.</p>}
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-1/2 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"
-                >
-                  Verify PIN
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      );
-    }
-
     function App() {
-      const [company] = useState({
-        name: "Express Van Distribution",
-        createdAt: "2026-08-20",
-        masterPin: "1234",
-        subscriptionStatus: "active"
-      });
-
-      const [role, setRole] = useState("Company Admin");
+      const [lang, setLang] = useState('BN');
+      const [currency, setCurrency] = useState('BDT');
+      const [role, setRole] = useState("Salesman");
+      const [pinInput, setPinInput] = useState('');
       const [showPinModal, setShowPinModal] = useState(false);
-      const [isTrialExpired, setIsTrialExpired] = useState(false);
+      const [targetRole, setTargetRole] = useState('');
+      
+      // Device Security & Location States
+      const [deviceId] = useState(getDeviceId());
+      const [isDeviceApproved, setIsDeviceApproved] = useState(true); // Toggleable via Admin
+      const [checkedInShop, setCheckedInShop] = useState(null);
+      const [geoCoordinates, setGeoCoordinates] = useState(null);
 
-      const [products] = useState([
-        { id: 1, name: "Juice Pack 200ml", unit: "Case", qty: 10, pcsPerCase: 24, price: 1440 },
-        { id: 2, name: "Biscuit Pack", unit: "Box", qty: 25, pcsPerCase: 12, price: 360 }
-      ]);
+      // Route State
+      const [selectedRoute, setSelectedRoute] = useState("Route-1");
 
-      const invoiceData = {
-        id: "INV-9081",
-        companyName: company.name,
-        items: [
-          { name: "Juice Pack 200ml", unit: "1 Case (24 Pcs)", qty: 1, price: 1440 },
-          { name: "Biscuit Pack", unit: "2 Boxes (24 Pcs)", qty: 2, price: 360 }
-        ],
-        total: 2160
+      const t = translations[lang];
+      const currencySymbol = currency === 'BDT' ? '৳' : currency === 'USD' ? '$' : '﷼';
+
+      const company = {
+        name: "Express Van Distribution Ltd.",
+        masterPin: "1234",
+        superKey: "9999"
       };
 
-      useEffect(() => {
-        const createdDate = new Date(company.createdAt);
-        const currentDate = new Date();
-        const diffDays = Math.ceil((currentDate - createdDate) / (1000 * 60 * 60 * 24));
-        if (diffDays > 7 && company.subscriptionStatus !== "paid") {
-          setIsTrialExpired(true);
+      const routes = {
+        "Route-1": { 
+          name: "রুট ১: ধানমন্ডি - মোহাম্মদপুর", 
+          shops: [
+            { id: 101, name: "রহিম স্টোর", lat: 23.7461, lng: 90.3742 },
+            { id: 102, name: "মায়ের দোয়া এন্টারপ্রাইজ", lat: 23.7508, lng: 90.3654 }
+          ] 
+        },
+        "Route-2": { 
+          name: "রুট ২: মিরপুর ১০ - ১২", 
+          shops: [
+            { id: 201, name: "জনতা ট্রেডার্স", lat: 23.8069, lng: 90.3687 }
+          ] 
         }
-      }, [company]);
+      };
+
+      const handleCheckIn = (shop) => {
+        if (!navigator.geolocation) {
+          alert("আপনার ফোনে GPS সাপোর্ট করছে না!");
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setGeoCoordinates({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            });
+            setCheckedInShop(shop.name);
+            alert(`GPS ভেরিফায়েড! ${shop.name} এ চেক-ইন সফল হয়েছে।\nLat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}`);
+          },
+          (error) => {
+            alert("জিপিএস লোকেশন পাওয়া যায়নি: " + error.message);
+          }
+        );
+      };
+
+      const handleRoleChange = (newRole) => {
+        if (newRole === "Salesman") {
+          setRole("Salesman");
+        } else {
+          setTargetRole(newRole);
+          setShowPinModal(true);
+        }
+      };
+
+      const verifyPin = () => {
+        if (targetRole === "Company Admin" && pinInput === company.masterPin) {
+          setRole("Company Admin");
+          setShowPinModal(false);
+        } else if (targetRole === "Super Admin" && pinInput === company.superKey) {
+          setRole("Super Admin");
+          setShowPinModal(false);
+        } else {
+          alert("ভুল সিকিউরিটি পিন!");
+        }
+        setPinInput('');
+      };
+
+      const printReceipt = async () => {
+        if (!checkedInShop && role === "Salesman") {
+          alert("প্রিন্ট করার আগে রুট শিডিউল থেকে দোকানে জিপিএস চেক-ইন করুন!");
+          return;
+        }
+        try {
+          if (!navigator.bluetooth) {
+            alert("Web Bluetooth API এই ডিভাইসে নেই।");
+            return;
+          }
+          await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+          });
+          alert("প্রিন্টারের সাথে কানেক্ট হয়েছে!");
+        } catch (e) {
+          alert("ব্লুটুথ কানেকশন এরর: " + e.message);
+        }
+      };
 
       return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-          {isTrialExpired && role !== "Super Admin" && (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
-                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">!</div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">7-Day Free Trial Expired</h2>
-                <p className="text-gray-600 mb-6 text-sm">
-                  Your free access limit has ended. Please renew subscription via bKash, Nagad, Visa, or Binance Pay.
-                </p>
-                <button className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg">
-                  Upgrade Now (bKash / Visa / Binance)
-                </button>
-              </div>
-            </div>
-          )}
-
-          <header className="bg-indigo-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <div className="min-h-screen flex flex-col font-sans">
+          {/* Top Bar Controls */}
+          <header className="bg-indigo-900 text-white px-4 py-3 flex flex-wrap justify-between items-center shadow-md gap-2">
             <div>
-              <h1 className="text-xl font-bold">{company.name}</h1>
-              <p className="text-xs text-indigo-200">Vyapar SaaS Engine</p>
+              <h1 className="text-lg font-bold">{company.name}</h1>
+              <p className="text-xs text-indigo-200">{t.title}</p>
             </div>
+
             <div className="flex items-center gap-2">
-              <span className="text-xs bg-indigo-800 px-3 py-1.5 rounded-full border border-indigo-700">Role: {role}</span>
+              <select 
+                value={lang} 
+                onChange={(e) => setLang(e.target.value)}
+                className="bg-indigo-800 text-white text-xs px-2 py-1 rounded border border-indigo-700 outline-none"
+              >
+                <option value="BN">বাংলা (BN)</option>
+                <option value="EN">English (EN)</option>
+              </select>
+
+              <select 
+                value={currency} 
+                onChange={(e) => setCurrency(e.target.value)}
+                className="bg-indigo-800 text-white text-xs px-2 py-1 rounded border border-indigo-700 outline-none"
+              >
+                <option value="BDT">BDT (৳)</option>
+                <option value="USD">USD ($)</option>
+                <option value="SAR">SAR (﷼)</option>
+              </select>
+
               <select 
                 value={role} 
-                onChange={(e) => {
-                  if (e.target.value === "Company Admin" && role === "Salesman") {
-                    setShowPinModal(true);
-                  } else {
-                    setRole(e.target.value);
-                  }
-                }}
-                className="bg-amber-500 text-black font-semibold text-xs px-2 py-1.5 rounded outline-none cursor-pointer"
+                onChange={(e) => handleRoleChange(e.target.value)}
+                className="bg-amber-500 text-black font-bold text-xs px-2 py-1 rounded outline-none cursor-pointer"
               >
-                <option value="Super Admin">View: Super Admin</option>
-                <option value="Company Admin">View: Company Admin</option>
-                <option value="Salesman">View: Salesman</option>
+                <option value="Salesman">Salesman View</option>
+                <option value="Company Admin">Company Admin</option>
+                <option value="Super Admin">Super Admin</option>
               </select>
             </div>
           </header>
 
+          {/* Device Security Status Bar */}
+          <div className="bg-slate-800 text-slate-200 px-4 py-1.5 text-xs flex justify-between items-center border-b border-slate-700">
+            <span className="flex items-center gap-1">
+              🔒 <strong>Device ID:</strong> <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-400">{deviceId}</code>
+            </span>
+            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-bold text-[10px]">
+              ✓ {t.approved}
+            </span>
+          </div>
+
+          {/* PIN Verification Modal */}
+          {showPinModal && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl p-6 max-w-xs w-full text-center shadow-2xl">
+                <h3 className="font-bold text-gray-800 mb-2">পাসওয়ার্ড / সিকিউরিটি পিন</h3>
+                <p className="text-xs text-gray-500 mb-4">{targetRole} অ্যাক্সেস করতে পিন দিন</p>
+                <input 
+                  type="password" 
+                  maxLength={4}
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  className="w-full text-center text-2xl py-2 border rounded-lg mb-4 outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="••••"
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowPinModal(false)} className="w-1/2 py-2 bg-gray-200 text-xs font-bold rounded-lg">বাতিল</button>
+                  <button onClick={verifyPin} className="w-1/2 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg">যাচাই করুন</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Main Content Area */}
           {role === "Super Admin" ? (
-            <main className="p-6 max-w-6xl w-full mx-auto">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Platform Control Dashboard (Super Admin View)</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white p-5 rounded-xl border shadow-sm">
-                  <p className="text-sm text-gray-500">Total SaaS Tenants</p>
-                  <h3 className="text-3xl font-black text-indigo-600">14 Shops</h3>
-                </div>
-                <div className="bg-white p-5 rounded-xl border shadow-sm">
-                  <p className="text-sm text-gray-500">Active Paid Accounts</p>
-                  <h3 className="text-3xl font-black text-emerald-600">11 Active</h3>
-                </div>
-                <div className="bg-white p-5 rounded-xl border shadow-sm">
-                  <p className="text-sm text-gray-500">Pending bKash/Card Approvals</p>
-                  <h3 className="text-3xl font-black text-amber-500">3 Pending</h3>
+            <main className="p-6 max-w-5xl mx-auto w-full">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">{t.superDashboard}</h2>
+              <div className="bg-white p-4 rounded-xl border mb-4 shadow-sm">
+                <h3 className="font-bold text-sm text-gray-700 mb-2">হাই-সিকিউরিটি ডিভাইস অ্যান্ড লাইসেন্স কন্ট্রোল</h3>
+                <div className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded border">
+                  <span>ডিভাইস আইডি: <strong>{deviceId}</strong></span>
+                  <button className="bg-emerald-600 text-white px-3 py-1 rounded font-bold">বাইন্ডিং সক্রিয়</button>
                 </div>
               </div>
             </main>
           ) : (
-            <main className="flex-1 p-6 max-w-6xl w-full mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-xl shadow-sm border p-5">
-                <h2 className="font-bold text-gray-800 mb-4 flex justify-between items-center">
-                  <span>Van Inventory Stock</span>
-                  <span className="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Multi-Unit</span>
-                </h2>
-                <div className="space-y-3">
-                  {products.map(p => (
-                    <div key={p.id} className="p-3 bg-gray-50 border rounded-lg flex justify-between items-center">
+            <main className="p-4 max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+              {/* Route Scheduler */}
+              <div className="bg-white p-4 rounded-xl border shadow-sm">
+                <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-1 text-sm">
+                  <span>📍</span> {t.routeSchedule}
+                </h3>
+                
+                <select 
+                  value={selectedRoute} 
+                  onChange={(e) => setSelectedRoute(e.target.value)}
+                  className="w-full p-2 border rounded-lg text-xs font-semibold bg-gray-50 mb-3 outline-none"
+                >
+                  <option value="Route-1">{routes["Route-1"].name}</option>
+                  <option value="Route-2">{routes["Route-2"].name}</option>
+                </select>
+
+                <div className="space-y-2">
+                  {routes[selectedRoute].shops.map((shop) => (
+                    <div key={shop.id} className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-lg flex justify-between items-center text-xs">
                       <div>
-                        <h4 className="font-semibold text-sm text-gray-800">{p.name}</h4>
-                        <p className="text-xs text-gray-500">1 {p.unit} = {p.pcsPerCase} Pcs</p>
+                        <p className="font-bold text-indigo-950">{shop.name}</p>
+                        {checkedInShop === shop.name && (
+                          <span className="text-[10px] text-emerald-600 font-bold block">✓ {t.geoVerified}</span>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <span className="font-bold text-gray-900 text-sm">{p.qty} {p.unit}s</span>
-                        <p className="text-xs text-green-600 font-medium">BDT {p.price}</p>
-                      </div>
+                      <button 
+                        onClick={() => handleCheckIn(shop)}
+                        className={`px-2.5 py-1 rounded text-[10px] font-bold ${
+                          checkedInShop === shop.name ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'
+                        }`}
+                      >
+                        {checkedInShop === shop.name ? 'চেক-ইন সম্পন্ন' : t.checkIn}
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="md:col-span-2 bg-white rounded-xl shadow-sm border p-5 flex flex-col justify-between">
+              {/* Sales Invoice & Inventory Panel */}
+              <div className="md:col-span-2 bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-center border-b pb-3 mb-4">
-                    <h2 className="font-bold text-gray-800">Current Sales Invoice #{invoiceData.id}</h2>
-                    <span className="text-xs text-gray-500">Digits: Standard English (1, 2, 3)</span>
+                  <div className="flex justify-between items-center border-b pb-2 mb-3">
+                    <h3 className="font-bold text-gray-800 text-sm">{t.currentInvoice} #INV-102</h3>
+                    {checkedInShop ? (
+                      <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
+                        দোকান: {checkedInShop}
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">
+                        দোকান সিলেক্ট করা হয়নি
+                      </span>
+                    )}
                   </div>
 
-                  <div className="space-y-2 mb-6">
-                    {invoiceData.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-sm py-2 border-b border-gray-100">
-                        <span className="text-gray-800 font-medium">{item.name} <span className="text-xs text-gray-400">({item.unit})</span></span>
-                        <span className="font-semibold">BDT {item.qty * item.price}</span>
-                      </div>
-                    ))}
+                  <div className="space-y-2 text-sm mb-4">
+                    <div className="flex justify-between p-2 bg-gray-50 rounded border">
+                      <span>Juice Box (1 Case x 24)</span>
+                      <span className="font-bold">{currencySymbol} 1440</span>
+                    </div>
                   </div>
 
-                  <div className="bg-gray-50 p-4 rounded-lg flex justify-between items-center mb-6">
-                    <span className="font-bold text-gray-700">Total Bill Amount:</span>
-                    <span className="text-2xl font-black text-indigo-900">BDT {invoiceData.total}</span>
+                  <div className="flex justify-between font-bold text-lg text-indigo-900 border-t pt-2">
+                    <span>{t.total}</span>
+                    <span>{currencySymbol} 1440</span>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => printThermalReceipt(invoiceData)}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2"
+                <button 
+                  onClick={printReceipt}
+                  className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow transition-all"
                 >
-                  <span>🖨️</span> Print via Web Bluetooth (58mm)
+                  {t.printBtn}
                 </button>
               </div>
             </main>
-          )}
-
-          {showPinModal && (
-            <MasterPinModal 
-              correctPin={company.masterPin}
-              onSuccess={() => { setRole("Company Admin"); setShowPinModal(false); }}
-              onClose={() => setShowPinModal(false)}
-            />
           )}
         </div>
       );
@@ -296,4 +332,4 @@
     root.render(<App />);
   </script>
 </body>
-  </html>
+</html>
