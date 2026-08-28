@@ -27,7 +27,8 @@ jobs:
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir .
+          # Adding '--force' and running init non-interactively
+          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir . --force
           npx cap add android
           npx cap sync android
 
@@ -35,7 +36,7 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease --stacktrace
 
       - name: Upload Artifact AAB
         uses: actions/upload-artifact@v4
