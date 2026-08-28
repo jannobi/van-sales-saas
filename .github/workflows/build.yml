@@ -23,15 +23,15 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Create Capacitor Project Non-Interactively
+      - name: Setup Capacitor Android
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir . --inline
-          npx cap add android --inline || true
+          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir .
+          npx cap add android || true
           npx cap sync android
 
-      - name: Build Release AAB Bundle
+      - name: Build Release Bundle
         run: |
           cd android
           chmod +x gradlew
