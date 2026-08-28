@@ -13,21 +13,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Java JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Setup Capacitor Android
+      - name: Prepare Dummy Web Assets & Setup Capacitor
         run: |
+          mkdir -p www
+          cp index.html www/ 2>/dev/null || echo "<html><body>Vyapar Van</body></html>" > www/index.html
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir .
+          npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir www
           npx cap add android || true
           npx cap sync android
 
