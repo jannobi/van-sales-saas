@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vyapar Enterprise Global SaaS - All Languages & Currencies</title>
+  <title>Vyapar Enterprise - Complete Van Sales & Inventory SaaS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,158 +16,119 @@
     const { useState } = React;
 
     function App() {
-      // Global Multi-Language & All Currencies State
       const [lang, setLang] = useState('bn');
       const [currency, setCurrency] = useState('BDT');
 
-      // Auth State
+      // Auth & Roles
       const [authRole, setAuthRole] = useState(null);
       const [loginPin, setLoginPin] = useState('');
       const [loginTarget, setLoginTarget] = useState('');
 
-      // Dynamic Packages (Super Admin Can Edit Price & Details)
-      const [packages, setPackages] = useState([
-        { id: 1, name: "Monthly Standard Plan", price: 500, duration: "30 Days" },
-        { id: 2, name: "Annual Premium Plan", price: 5000, duration: "365 Days" }
-      ]);
-      const [editingPkg, setEditingPkg] = useState(null);
-      const [newPrice, setNewPrice] = useState('');
-
-      // Vyapar Data
       const [activeTab, setActiveTab] = useState('home');
-      const [parties, setParties] = useState([
-        { id: 1, name: "Rahim Store", phone: "01711223344", balance: "1500 Receivable" }
-      ]);
-      const [checkedInShop, setCheckedInShop] = useState(null);
 
-      // Comprehensive Multi-Language Dictionary (Adding major world languages)
+      // Vyapar Core States
+      const [parties, setParties] = useState([
+        { id: 1, name: "ভাই ভাই স্টোর", phone: "01711223344", amount: 1500, type: "Receivable", address: "সাভার বাজার" },
+        { id: 2, name: "মায়ের দোয়া এন্টারপ্রাইজ", phone: "01811556677", amount: 3200, type: "Receivable", address: "নবীনগর" }
+      ]);
+      const [showAddPartyModal, setShowAddPartyModal] = useState(false);
+      const [newPartyName, setNewPartyName] = useState('');
+      const [newPartyPhone, setNewPartyPhone] = useState('');
+      const [newPartyAddress, setNewPartyAddress] = useState('');
+      const [newPartyAmount, setNewPartyAmount] = useState('');
+      const [newPartyType, setNewPartyType] = useState('Receivable');
+
+      // Products & Stock with Units & Pricing (Vyapar Style)
+      const [items, setItems] = useState([
+        { id: 1, name: "ম্যাংগো জুস (কার্টন)", unit: "Carton", salePrice: 1440, purchasePrice: 1200, stock: 45 },
+        { id: 2, name: "এনার্জি ড্রিংকস (পিস)", unit: "Pcs", salePrice: 50, purchasePrice: 40, stock: 120 }
+      ]);
+      const [showAddItemModal, setShowAddItemModal] = useState(false);
+      const [newItemName, setNewItemName] = useState('');
+      const [newItemUnit, setNewItemUnit] = useState('Pcs');
+      const [newItemSalePrice, setNewItemSalePrice] = useState('');
+      const [newItemPurchasePrice, setNewItemPurchasePrice] = useState('');
+      const [newItemStock, setNewItemStock] = useState('');
+
+      // Sales Invoice State
+      const [salesCart, setSalesCart] = useState([]);
+      const [selectedPartyForSale, setSelectedPartyForSale] = useState('');
+
       const t = {
         bn: {
-          title: "ভ্যাপর এন্টারপ্রাইজ ভ্যান সেলস",
-          salesman: "সেলসম্যান মোড",
-          companyAdmin: "কোম্পানি অ্যাডমিন",
-          superAdmin: "সুপার অ্যাডমিন",
-          logout: "লগআউট",
-          cancel: "বাতিল",
-          enter: "প্রবেশ",
-          home: "হোম",
+          title: "ভ্যাপর ভ্যান সেলস ও ইনভেন্টরি",
+          home: "হোম ড্যাশবোর্ড",
           parties: "পার্টি (কাস্টমার)",
-          sales: "সেলস ও প্রিন্ট",
-          totalReceivable: "মোট রিসিভেবল",
-          cashCollection: "আজকের ক্যাশ কালেকশন",
+          items: "আইটেম ও স্টক",
+          sales: "সেলস ও বিলিং",
+          totalReceivable: "মোট পাবো (Receivable)",
+          cashCollection: "আজকের ক্যাশ",
+          addPartyBtn: "+ নতুন পার্টি যোগ করুন",
+          addItemBtn: "+ নতুন প্রোডাক্ট/আইটেম যোগ করুন",
           gpsCheckIn: "GPS চেক-ইন",
           checkedIn: "চেকড-ইন",
           printMemo: "ব্লুটুথ থার্মাল প্রিন্ট করুন",
-          packagesTitle: "সুপার অ্যাডমিন প্যাকেজ কন্ট্রোল"
+          save: "সংরক্ষণ করুন",
+          cancel: "বাতিল"
         },
         en: {
-          title: "Vyapar Enterprise Van Sales",
-          salesman: "Salesman Mode",
-          companyAdmin: "Company Admin",
-          superAdmin: "Super Admin",
-          logout: "Logout",
-          cancel: "Cancel",
-          enter: "Enter",
-          home: "Home",
+          title: "Vyapar Van Sales & Inventory",
+          home: "Home Dashboard",
           parties: "Parties",
-          sales: "Sales & Print",
+          items: "Items & Stock",
+          sales: "Sales & Billing",
           totalReceivable: "Total Receivable",
           cashCollection: "Cash Collection",
+          addPartyBtn: "+ Add Party",
+          addItemBtn: "+ Add Item / Product",
           gpsCheckIn: "GPS Check-In",
           checkedIn: "Checked-In",
           printMemo: "Print Thermal Memo",
-          packagesTitle: "Super Admin Package Control"
-        },
-        hi: {
-          title: "व्यापार एंटरप्राइज वैन सेल्स",
-          salesman: "सेल्समैन मोड",
-          companyAdmin: "कंपनी एडमिन",
-          superAdmin: "सुपर एडमिन",
-          logout: "लॉगआउट",
-          cancel: "रद्द करें",
-          enter: "प्रवेश",
-          home: "होम",
-          parties: "पार्टियाँ",
-          sales: "बिक्री और प्रिंट",
-          totalReceivable: "कुल प्राप्य",
-          cashCollection: "नकद संग्रह",
-          gpsCheckIn: "GPS चेक-इन",
-          checkedIn: "चेक-इन किया गया",
-          printMemo: "थर्मल मेमो प्रिंट करें",
-          packagesTitle: "सुपर एडमिन पैकेज नियंत्रण"
-        },
-        ar: {
-          title: "فايابار للمبيعات",
-          salesman: "وضع البائع",
-          companyAdmin: "مشرف الشركة",
-          superAdmin: "المشرف العام",
-          logout: "تسجيل الخروج",
-          cancel: "إلغاء",
-          enter: "دخول",
-          home: "الرئيسية",
-          parties: "العملاء",
-          sales: "المبيعات",
-          totalReceivable: "إجمالي المستحقات",
-          cashCollection: "تحصيل النقدية",
-          gpsCheckIn: "تسجيل الموقع",
-          checkedIn: "تم التسجيل",
-          printMemo: "طباعة الفاتورة",
-          packagesTitle: "تحكم الباقات"
-        },
-        es: {
-          title: "Vyapar Enterprise Ventas",
-          salesman: "Modo Vendedor",
-          companyAdmin: "Admin de Empresa",
-          superAdmin: "Súper Admin",
-          logout: "Cerrar sesión",
-          cancel: "Cancelar",
-          enter: "Entrar",
-          home: "Inicio",
-          parties: "Clientes",
-          sales: "Ventas",
-          totalReceivable: "Total por Cobrar",
-          cashCollection: "Cobro en Efectivo",
-          gpsCheckIn: "Check-in GPS",
-          checkedIn: "Registrado",
-          printMemo: "Imprimir Ticket",
-          packagesTitle: "Control de Paquetes"
-        },
-        fr: {
-          title: "Vyapar Enterprise Ventes",
-          salesman: "Mode Vendeur",
-          companyAdmin: "Admin Entreprise",
-          superAdmin: "Super Admin",
-          logout: "Déconnexion",
-          cancel: "Annuler",
-          enter: "Entrer",
-          home: "Accueil",
-          parties: "Clients",
-          sales: "Ventes",
-          totalReceivable: "Total à recevoir",
-          cashCollection: "Encaissement",
-          gpsCheckIn: "Pointage GPS",
-          checkedIn: "Pointé",
-          printMemo: "Imprimer le reçu",
-          packagesTitle: "Gestion des Forfaits"
-        },
-        zh: {
-          title: "Vyapar 企业货车销售",
-          salesman: "销售员模式",
-          companyAdmin: "公司管理员",
-          superAdmin: "超级管理员",
-          logout: "登出",
-          cancel: "取消",
-          enter: "进入",
-          home: "首页",
-          parties: "客户",
-          sales: "销售与打印",
-          totalReceivable: "应收账款",
-          cashCollection: "现金收款",
-          gpsCheckIn: "GPS签到",
-          checkedIn: "已签到",
-          printMemo: "打印小票",
-          packagesTitle: "超级管理员套餐控制"
+          save: "Save",
+          cancel: "Cancel"
         }
+      };
+
+      const handleAddParty = () => {
+        if (!newPartyName) {
+          alert("দয়া করে পার্টির নাম দিন!");
+          return;
+        }
+        setParties([...parties, {
+          id: Date.now(),
+          name: newPartyName,
+          phone: newPartyPhone || 'N/A',
+          address: newPartyAddress || 'N/A',
+          amount: Number(newPartyAmount) || 0,
+          type: newPartyType
+        }]);
+        setNewPartyName('');
+        setNewPartyPhone('');
+        setNewPartyAddress('');
+        setNewPartyAmount('');
+        setShowAddPartyModal(false);
+        alert("নতুন পার্টি সফলভাবে যুক্ত হয়েছে!");
+      };
+
+      const handleAddItem = () => {
+        if (!newItemName) {
+          alert("প্রোডাক্টের নাম দিন!");
+          return;
+        }
+        setItems([...items, {
+          id: Date.now(),
+          name: newItemName,
+          unit: newItemUnit,
+          salePrice: Number(newItemSalePrice) || 0,
+          purchasePrice: Number(newItemPurchasePrice) || 0,
+          stock: Number(newItemStock) || 0
+        }]);
+        setNewItemName('');
+        setNewItemSalePrice('');
+        setNewItemPurchasePrice('');
+        setNewItemStock('');
+        setShowAddItemModal(false);
+        alert("নতুন প্রোডাক্ট ও স্টক সফলভাবে যুক্ত হয়েছে!");
       };
 
       const handleLoginSubmit = () => {
@@ -178,71 +139,49 @@
         } else if (loginTarget === 'super_admin' && loginPin === '1123') {
           setAuthRole('super_admin');
         } else {
-          alert('Wrong PIN / ভুল পিন!');
+          alert('ভুল পিন!');
         }
         setLoginPin('');
         setLoginTarget('');
       };
 
-      const handleUpdatePackage = (id) => {
-        setPackages(packages.map(p => p.id === id ? {...p, price: Number(newPrice)} : p));
-        setEditingPkg(null);
-        setNewPrice('');
-        alert('Package Updated Successfully!');
-      };
-
       if (!authRole) {
         return (
           <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
-            {/* Global Language & All Currencies Top Bar */}
             <div className="absolute top-4 right-4 flex gap-2">
-              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-white text-xs p-1.5 rounded font-bold shadow">
-                <option value="bn">বাংলা (Bengali)</option>
+              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-white text-xs p-1 rounded font-bold">
+                <option value="bn">বাংলা</option>
                 <option value="en">English</option>
-                <option value="hi">हिन्दी (Hindi)</option>
-                <option value="ar">العربية (Arabic)</option>
-                <option value="es">Español (Spanish)</option>
-                <option value="fr">Français (French)</option>
-                <option value="zh">中文 (Chinese)</option>
               </select>
-
-              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="bg-white text-xs p-1.5 rounded font-bold shadow">
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="bg-white text-xs p-1 rounded font-bold">
                 <option value="BDT">BDT (৳)</option>
                 <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
                 <option value="INR">INR (₹)</option>
-                <option value="SAR">SAR (ر.س)</option>
-                <option value="AED">AED (د.إ)</option>
-                <option value="CAD">CAD (CA$)</option>
-                <option value="AUD">AUD (A$)</option>
-                <option value="JPY">JPY (¥)</option>
-                <option value="CNY">CNY (¥)</option>
               </select>
             </div>
 
             <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
               <div className="text-center">
-                <h1 className="text-lg font-bold text-slate-900">{t[lang] ? t[lang].title : t['en'].title}</h1>
-                <p className="text-xs text-gray-500 mt-1">Global Multi-Language & All Currencies System</p>
+                <h1 className="text-lg font-bold text-slate-900">Vyapar Van Sales</h1>
+                <p className="text-xs text-gray-500 mt-1">রোল সিলেক্ট করুন</p>
               </div>
 
               <div className="space-y-2">
-                <button onClick={() => setAuthRole('salesman')} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow">
-                  🚚 {t[lang] ? t[lang].salesman : t['en'].salesman}
+                <button onClick={() => setAuthRole('salesman')} className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow">
+                  🚚 সেলসম্যান মোড (রুট ও সেলস)
                 </button>
-                <button onClick={() => setLoginTarget('company_admin')} className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow">
-                  🏢 {t[lang] ? t[lang].companyAdmin : t['en'].companyAdmin}
+                <button onClick={() => setLoginTarget('company_admin')} className="w-full py-3 bg-slate-800 text-white font-bold rounded-xl text-xs shadow">
+                  🏢 কোম্পানি অ্যাডমিন প্যানেল
                 </button>
-                <button onClick={() => setLoginTarget('super_admin')} className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow">
-                  👑 {t[lang] ? t[lang].superAdmin : t['en'].superAdmin}
+                <button onClick={() => setLoginTarget('super_admin')} className="w-full py-3 bg-amber-600 text-white font-bold rounded-xl text-xs shadow">
+                  👑 সুপার অ্যাডমিন প্যানেল
                 </button>
               </div>
 
               {loginTarget && (
                 <div className="p-4 bg-gray-50 border rounded-xl space-y-3">
                   <p className="text-xs font-bold text-gray-700 text-center">
-                    {loginTarget === 'company_admin' ? 'Company PIN (2234)' : 'Super Admin PIN (1123)'}
+                    {loginTarget === 'company_admin' ? 'কোম্পানি পিন (2234)' : 'সুপার পিন (1123)'}
                   </p>
                   <input 
                     type="password" 
@@ -253,8 +192,8 @@
                     className="w-full text-center text-xl py-2 border rounded-lg outline-none tracking-widest"
                   />
                   <div className="flex gap-2">
-                    <button onClick={() => setLoginTarget('')} className="w-1/2 py-2 bg-gray-200 text-xs font-bold rounded-lg">{t[lang].cancel}</button>
-                    <button onClick={handleLoginSubmit} className="w-1/2 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg">{t[lang].enter}</button>
+                    <button onClick={() => setLoginTarget('')} className="w-1/2 py-2 bg-gray-200 text-xs font-bold rounded-lg">বাতিল</button>
+                    <button onClick={handleLoginSubmit} className="w-1/2 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg">প্রবেশ</button>
                   </div>
                 </div>
               )}
@@ -265,68 +204,35 @@
 
       return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
-          {/* Header */}
           <header className="bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow">
             <h1 className="text-xs font-bold">{t[lang].title} ({authRole.toUpperCase()})</h1>
-            <div className="flex items-center gap-2">
-              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-800 text-white text-xs p-1 rounded">
-                <option value="bn">বাংলা</option>
-                <option value="en">English</option>
-                <option value="hi">हिन्दी</option>
-                <option value="ar">العربية</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="zh">中文</option>
-              </select>
-              <button onClick={() => setAuthRole(null)} className="bg-red-600 text-white text-xs px-2.5 py-1 rounded font-bold">
-                {t[lang].logout}
-              </button>
-            </div>
+            <button onClick={() => setAuthRole(null)} className="bg-red-600 text-white text-xs px-2.5 py-1 rounded font-bold">লগআউট</button>
           </header>
 
-          {/* Super Admin Panel */}
           {authRole === 'super_admin' && (
-            <main className="p-4 max-w-4xl mx-auto w-full space-y-4">
-              <div className="bg-white p-4 rounded-xl shadow border space-y-3">
-                <h2 className="font-bold text-gray-800 text-sm">👑 {t[lang].packagesTitle}</h2>
-                <div className="space-y-2 text-xs">
-                  {packages.map(pkg => (
-                    <div key={pkg.id} className="p-3 bg-gray-50 border rounded flex justify-between items-center">
-                      <div>
-                        <p className="font-bold text-gray-800">{pkg.name} ({pkg.duration})</p>
-                        <p className="text-emerald-700 font-bold">Price: {currency} {pkg.price}</p>
-                      </div>
-                      {editingPkg === pkg.id ? (
-                        <div className="flex gap-1 items-center">
-                          <input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="New Price" className="w-20 p-1 border rounded text-xs" />
-                          <button onClick={() => handleUpdatePackage(pkg.id)} className="bg-emerald-600 text-white px-2 py-1 rounded font-bold">Save</button>
-                        </div>
-                      ) : (
-                        <button onClick={() => { setEditingPkg(pkg.id); setNewPrice(pkg.price); }} className="bg-indigo-600 text-white px-3 py-1.5 rounded font-bold">Edit Price</button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </main>
-          )}
-
-          {/* Company Admin Panel */}
-          {authRole === 'company_admin' && (
-            <main className="p-4 max-w-4xl mx-auto w-full space-y-4">
+            <main className="p-4 max-w-4xl mx-auto w-full">
               <div className="bg-white p-4 rounded-xl shadow border">
-                <h2 className="font-bold text-gray-800 text-sm mb-2">🏢 Company Admin Dashboard</h2>
-                <p className="text-xs text-gray-600">Manage Routes, Salesman Stock, and Cash Collection.</p>
+                <h2 className="font-bold text-gray-800 text-sm">👑 সুপার অ্যাডমিন মাস্টার কন্ট্রোল</h2>
+                <p className="text-xs text-gray-600 mt-2">প্যাকেজ সাবস্ক্রিপশন, লাইসেন্স এবং গ্লোবাল সেটিংস ম্যানেজমেন্ট।</p>
               </div>
             </main>
           )}
 
-          {/* Salesman Vyapar App */}
+          {authRole === 'company_admin' && (
+            <main className="p-4 max-w-4xl mx-auto w-full">
+              <div className="bg-white p-4 rounded-xl shadow border">
+                <h2 className="font-bold text-gray-800 text-sm">🏢 কোম্পানি অ্যাডমিন ড্যাশবোর্ড</h2>
+                <p className="text-xs text-gray-600 mt-2">সেলসম্যান রুট মনিটরিং, স্টক ও ক্যাশ কালেকশন রিপোর্ট।</p>
+              </div>
+            </main>
+          )}
+
           {authRole === 'salesman' && (
             <div className="flex flex-col flex-1 pb-16">
               <div className="bg-white border-b flex justify-around text-xs font-bold text-gray-600">
                 <button onClick={() => setActiveTab('home')} className={`py-3 px-2 border-b-2 ${activeTab === 'home' ? 'border-emerald-600 text-emerald-700' : 'border-transparent'}`}>{t[lang].home}</button>
                 <button onClick={() => setActiveTab('parties')} className={`py-3 px-2 border-b-2 ${activeTab === 'parties' ? 'border-emerald-600 text-emerald-700' : 'border-transparent'}`}>{t[lang].parties}</button>
+                <button onClick={() => setActiveTab('items')} className={`py-3 px-2 border-b-2 ${activeTab === 'items' ? 'border-emerald-600 text-emerald-700' : 'border-transparent'}`}>{t[lang].items}</button>
                 <button onClick={() => setActiveTab('sales')} className={`py-3 px-2 border-b-2 ${activeTab === 'sales' ? 'border-emerald-600 text-emerald-700' : 'border-transparent'}`}>{t[lang].sales}</button>
               </div>
 
@@ -336,7 +242,7 @@
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-white p-4 rounded-xl shadow border">
                         <p className="text-xs text-gray-500">{t[lang].totalReceivable}</p>
-                        <p className="text-base font-bold text-emerald-600">{currency} 4,700</p>
+                        <p className="text-base font-bold text-emerald-600">{currency} {parties.reduce((acc, p) => acc + p.amount, 0)}</p>
                       </div>
                       <div className="bg-white p-4 rounded-xl shadow border">
                         <p className="text-xs text-gray-500">{t[lang].cashCollection}</p>
@@ -345,15 +251,15 @@
                     </div>
 
                     <div className="bg-white p-4 rounded-xl shadow border space-y-3">
-                      <h3 className="font-bold text-gray-800 text-sm">📍 Customer Check-In</h3>
+                      <h3 className="font-bold text-gray-800 text-sm">📍 কাস্টমার রুট ও চেক-ইন</h3>
                       {parties.map(p => (
                         <div key={p.id} className="p-3 bg-gray-50 border rounded flex justify-between items-center text-xs">
                           <div>
                             <p className="font-bold">{p.name}</p>
-                            <p className="text-gray-500">{p.phone}</p>
+                            <p className="text-gray-500">{p.phone} | {p.address}</p>
                           </div>
-                          <button onClick={() => { setCheckedInShop(p.name); alert('GPS Check-In Successful!'); }} className={`px-3 py-1.5 rounded font-bold ${checkedInShop === p.name ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`}>
-                            {checkedInShop === p.name ? t[lang].checkedIn : t[lang].gpsCheckIn}
+                          <button onClick={() => alert('সফল GPS চেক-ইন!')} className="px-3 py-1.5 rounded font-bold bg-indigo-600 text-white">
+                            {t[lang].gpsCheckIn}
                           </button>
                         </div>
                       ))}
@@ -362,31 +268,113 @@
                 )}
 
                 {activeTab === 'parties' && (
-                  <div className="bg-white p-4 rounded-xl shadow border space-y-3">
-                    <h3 className="font-bold text-gray-800 text-sm">Party Ledger</h3>
-                    {parties.map(p => (
-                      <div key={p.id} className="p-3 bg-gray-50 border rounded flex justify-between text-xs">
-                        <span className="font-bold">{p.name}</span>
-                        <span className="text-amber-600 font-bold">{p.balance} ({currency})</span>
-                      </div>
-                    ))}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-gray-800 text-sm">পার্টি লেজার তালিকা</h3>
+                      <button onClick={() => setShowAddPartyModal(true)} className="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl shadow">
+                        {t[lang].addPartyBtn}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {parties.map(p => (
+                        <div key={p.id} className="p-3 bg-white border rounded-xl flex justify-between items-center text-xs shadow-sm">
+                          <div>
+                            <p className="font-bold text-gray-900">{p.name}</p>
+                            <p className="text-gray-500">ফোন: {p.phone} | ঠিঃ {p.address}</p>
+                          </div>
+                          <span className="font-bold text-emerald-600">{currency} {p.amount} ({p.type})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'items' && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-bold text-gray-800 text-sm">ভ্যান স্টক ও প্রোডাক্ট তালিকা</h3>
+                      <button onClick={() => setShowAddItemModal(true)} className="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl shadow">
+                        {t[lang].addItemBtn}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {items.map(item => (
+                        <div key={item.id} className="p-3 bg-white border rounded-xl flex justify-between items-center text-xs shadow-sm">
+                          <div>
+                            <p className="font-bold text-gray-900">{item.name} ({item.unit})</p>
+                            <p className="text-gray-500">ক্রয়: {currency} {item.purchasePrice} | বিক্রয়: {currency} {item.salePrice}</p>
+                          </div>
+                          <span className="font-bold text-indigo-600">স্টক: {item.stock} {item.unit}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
                 {activeTab === 'sales' && (
-                  <div className="bg-white p-4 rounded-xl shadow border flex flex-col justify-between">
+                  <div className="bg-white p-4 rounded-xl shadow border flex flex-col justify-between space-y-3">
                     <div>
-                      <h3 className="font-bold text-gray-800 text-sm mb-3">Invoice & Thermal Print</h3>
+                      <h3 className="font-bold text-gray-800 text-sm mb-3">ইনভয়েস ও বিলিং</h3>
+                      <select value={selectedPartyForSale} onChange={(e) => setSelectedPartyForSale(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs mb-3 bg-gray-50">
+                        <option value="">-- পার্টি বা কাস্টমার সিলেক্ট করুন --</option>
+                        {parties.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                      </select>
                       <div className="p-3 bg-gray-50 border rounded text-xs mb-3 flex justify-between">
-                        <span>Juice Box (2 Pcs)</span>
+                        <span>ম্যাংগো জুস (কার্টন) x 2</span>
                         <span className="font-bold">{currency} 2,880</span>
                       </div>
                     </div>
-                    <button onClick={() => alert('Bluetooth Thermal Print Executed!')} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow text-xs">
+                    <button onClick={() => alert('ব্লুটুথ থার্মাল প্রিন্ট সফলভাবে সম্পন্ন হয়েছে!')} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow text-xs">
                       🖨️ {t[lang].printMemo}
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Add Party Modal */}
+          {showAddPartyModal && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-3">
+                <h3 className="font-bold text-gray-900 text-base">নতুন পার্টি (কাস্টমার) যোগ করুন</h3>
+                <input type="text" value={newPartyName} onChange={(e) => setNewPartyName(e.target.value)} placeholder="পার্টির নাম (যেমন: ভাই ভাই স্টোর)" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <input type="text" value={newPartyPhone} onChange={(e) => setNewPartyPhone(e.target.value)} placeholder="মোবাইল নম্বর" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <input type="text" value={newPartyAddress} onChange={(e) => setNewPartyAddress(e.target.value)} placeholder="ঠিকানা বা রুট" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <input type="number" value={newPartyAmount} onChange={(e) => setNewPartyAmount(e.target.value)} placeholder="বকেয়া বা লেনদেন পরিমাণ" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <select value={newPartyType} onChange={(e) => setNewPartyType(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs outline-none bg-gray-50">
+                  <option value="Receivable">পাবো (You'll Get)</option>
+                  <option value="Payable">দেবো (You'll Give)</option>
+                </select>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setShowAddPartyModal(false)} className="w-1/2 py-2.5 bg-gray-200 text-xs font-bold rounded-xl">{t[lang].cancel}</button>
+                  <button onClick={handleAddParty} className="w-1/2 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl">{t[lang].save}</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Add Item / Product Modal */}
+          {showAddItemModal && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-3">
+                <h3 className="font-bold text-gray-900 text-base">নতুন প্রোডাক্ট ও স্টক যোগ করুন</h3>
+                <input type="text" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="প্রোডাক্ট বা আইটেমের নাম" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <select value={newItemUnit} onChange={(e) => setNewItemUnit(e.target.value)} className="w-full p-2.5 border rounded-xl text-xs outline-none bg-gray-50">
+                  <option value="Pcs">পিস (Pcs)</option>
+                    <option value="Carton">কার্টন (Carton)</option>
+                  <option value="Kg">কেজি (Kg)</option>
+                  <option value="Box">বক্স (Box)</option>
+                </select>
+                <input type="number" value={newItemPurchasePrice} onChange={(e) => setNewItemPurchasePrice(e.target.value)} placeholder="ক্রয় মূল্য (Purchase Price)" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <input type="number" value={newItemSalePrice} onChange={(e) => setNewItemSalePrice(e.target.value)} placeholder="বিক্রয় মূল্য (Sale Price)" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <input type="number" value={newItemStock} onChange={(e) => setNewItemStock(e.target.value)} placeholder="প্রাথমিক স্টক পরিমাণ (Quantity)" className="w-full p-2.5 border rounded-xl text-xs outline-none" />
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setShowAddItemModal(false)} className="w-1/2 py-2.5 bg-gray-200 text-xs font-bold rounded-xl">{t[lang].cancel}</button>
+                  <button onClick={handleAddItem} className="w-1/2 py-2.5 bg-emerald-600 text-white text-xs font-bold rounded-xl">{t[lang].save}</button>
+                </div>
               </div>
             </div>
           )}
