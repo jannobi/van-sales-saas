@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vyapar Enterprise SaaS - Multi-Lang & Admin Control</title>
+  <title>Vyapar Enterprise Global SaaS - All Languages & Currencies</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -16,7 +16,7 @@
     const { useState } = React;
 
     function App() {
-      // Localization & Currency State
+      // Global Multi-Language & All Currencies State
       const [lang, setLang] = useState('bn');
       const [currency, setCurrency] = useState('BDT');
 
@@ -25,10 +25,10 @@
       const [loginPin, setLoginPin] = useState('');
       const [loginTarget, setLoginTarget] = useState('');
 
-      // Dynamic Packages (Super Admin Can Edit)
+      // Dynamic Packages (Super Admin Can Edit Price & Details)
       const [packages, setPackages] = useState([
-        { id: 1, name: "মাসে বেসিক প্ল্যান", price: 500, duration: "30 Days" },
-        { id: 2, name: "বার্ষিক প্রিমিয়াম প্ল্যান", price: 5000, duration: "365 Days" }
+        { id: 1, name: "Monthly Standard Plan", price: 500, duration: "30 Days" },
+        { id: 2, name: "Annual Premium Plan", price: 5000, duration: "365 Days" }
       ]);
       const [editingPkg, setEditingPkg] = useState(null);
       const [newPrice, setNewPrice] = useState('');
@@ -36,56 +36,139 @@
       // Vyapar Data
       const [activeTab, setActiveTab] = useState('home');
       const [parties, setParties] = useState([
-        { id: 1, name: "রহিম স্টোর", phone: "01711223344", balance: "1500 Receivable" }
+        { id: 1, name: "Rahim Store", phone: "01711223344", balance: "1500 Receivable" }
       ]);
       const [checkedInShop, setCheckedInShop] = useState(null);
-      const [paymentModal, setPaymentModal] = useState(false);
-      const [selectedGateway, setSelectedGateway] = useState('bKash');
-      const [txnId, setTxnId] = useState('');
 
-      // Dictionary for Multi-Language
+      // Comprehensive Multi-Language Dictionary (Adding major world languages)
       const t = {
         bn: {
           title: "ভ্যাপর এন্টারপ্রাইজ ভ্যান সেলস",
-          loginSalesman: "সেলসম্যান মোড (রুট ও সেলস)",
-          loginCompany: "কোম্পানি অ্যাডমিন প্যানেল",
-          loginSuper: "সুপার অ্যাডমিন মাস্টার প্যানেল",
+          salesman: "সেলসম্যান মোড",
+          companyAdmin: "কোম্পানি অ্যাডমিন",
+          superAdmin: "সুপার অ্যাডমিন",
           logout: "লগআউট",
           cancel: "বাতিল",
           enter: "প্রবেশ",
           home: "হোম",
           parties: "পার্টি (কাস্টমার)",
-          items: "আইটেম ও স্টক",
           sales: "সেলস ও প্রিন্ট",
           totalReceivable: "মোট রিসিভেবল",
           cashCollection: "আজকের ক্যাশ কালেকশন",
           gpsCheckIn: "GPS চেক-ইন",
           checkedIn: "চেকড-ইন",
           printMemo: "ব্লুটুথ থার্মাল প্রিন্ট করুন",
-          packagesTitle: "প্যাকেজ ও প্রাইসিং কন্ট্রোল (সুপার অ্যাডমিন)"
+          packagesTitle: "সুপার অ্যাডমিন প্যাকেজ কন্ট্রোল"
         },
         en: {
           title: "Vyapar Enterprise Van Sales",
-          loginSalesman: "Salesman Mode (Route & Sales)",
-          loginCompany: "Company Admin Panel",
-          loginSuper: "Super Admin Master Panel",
+          salesman: "Salesman Mode",
+          companyAdmin: "Company Admin",
+          superAdmin: "Super Admin",
           logout: "Logout",
           cancel: "Cancel",
           enter: "Enter",
           home: "Home",
           parties: "Parties",
-          items: "Items & Stock",
           sales: "Sales & Print",
           totalReceivable: "Total Receivable",
-          cashCollection: "Today Cash Collection",
+          cashCollection: "Cash Collection",
           gpsCheckIn: "GPS Check-In",
           checkedIn: "Checked-In",
-          printMemo: "Print Bluetooth Thermal Memo",
-          packagesTitle: "Package & Pricing Control (Super Admin)"
+          printMemo: "Print Thermal Memo",
+          packagesTitle: "Super Admin Package Control"
+        },
+        hi: {
+          title: "व्यापार एंटरप्राइज वैन सेल्स",
+          salesman: "सेल्समैन मोड",
+          companyAdmin: "कंपनी एडमिन",
+          superAdmin: "सुपर एडमिन",
+          logout: "लॉगआउट",
+          cancel: "रद्द करें",
+          enter: "प्रवेश",
+          home: "होम",
+          parties: "पार्टियाँ",
+          sales: "बिक्री और प्रिंट",
+          totalReceivable: "कुल प्राप्य",
+          cashCollection: "नकद संग्रह",
+          gpsCheckIn: "GPS चेक-इन",
+          checkedIn: "चेक-इन किया गया",
+          printMemo: "थर्मल मेमो प्रिंट करें",
+          packagesTitle: "सुपर एडमिन पैकेज नियंत्रण"
+        },
+        ar: {
+          title: "فايابار للمبيعات",
+          salesman: "وضع البائع",
+          companyAdmin: "مشرف الشركة",
+          superAdmin: "المشرف العام",
+          logout: "تسجيل الخروج",
+          cancel: "إلغاء",
+          enter: "دخول",
+          home: "الرئيسية",
+          parties: "العملاء",
+          sales: "المبيعات",
+          totalReceivable: "إجمالي المستحقات",
+          cashCollection: "تحصيل النقدية",
+          gpsCheckIn: "تسجيل الموقع",
+          checkedIn: "تم التسجيل",
+          printMemo: "طباعة الفاتورة",
+          packagesTitle: "تحكم الباقات"
+        },
+        es: {
+          title: "Vyapar Enterprise Ventas",
+          salesman: "Modo Vendedor",
+          companyAdmin: "Admin de Empresa",
+          superAdmin: "Súper Admin",
+          logout: "Cerrar sesión",
+          cancel: "Cancelar",
+          enter: "Entrar",
+          home: "Inicio",
+          parties: "Clientes",
+          sales: "Ventas",
+          totalReceivable: "Total por Cobrar",
+          cashCollection: "Cobro en Efectivo",
+          gpsCheckIn: "Check-in GPS",
+          checkedIn: "Registrado",
+          printMemo: "Imprimir Ticket",
+          packagesTitle: "Control de Paquetes"
+        },
+        fr: {
+          title: "Vyapar Enterprise Ventes",
+          salesman: "Mode Vendeur",
+          companyAdmin: "Admin Entreprise",
+          superAdmin: "Super Admin",
+          logout: "Déconnexion",
+          cancel: "Annuler",
+          enter: "Entrer",
+          home: "Accueil",
+          parties: "Clients",
+          sales: "Ventes",
+          totalReceivable: "Total à recevoir",
+          cashCollection: "Encaissement",
+          gpsCheckIn: "Pointage GPS",
+          checkedIn: "Pointé",
+          printMemo: "Imprimer le reçu",
+          packagesTitle: "Gestion des Forfaits"
+        },
+        zh: {
+          title: "Vyapar 企业货车销售",
+          salesman: "销售员模式",
+          companyAdmin: "公司管理员",
+          superAdmin: "超级管理员",
+          logout: "登出",
+          cancel: "取消",
+          enter: "进入",
+          home: "首页",
+          parties: "客户",
+          sales: "销售与打印",
+          totalReceivable: "应收账款",
+          cashCollection: "现金收款",
+          gpsCheckIn: "GPS签到",
+          checkedIn: "已签到",
+          printMemo: "打印小票",
+          packagesTitle: "超级管理员套餐控制"
         }
       };
-
-      const currSymbol = currency === 'BDT' ? '৳' : currency === 'USD' ? '$' : '₹';
 
       const handleLoginSubmit = () => {
         if (loginTarget === 'salesman') {
@@ -95,7 +178,7 @@
         } else if (loginTarget === 'super_admin' && loginPin === '1123') {
           setAuthRole('super_admin');
         } else {
-          alert('ভুল পিন! অ্যাডমিন পিন: 2234 / সুপার পিন: 1123');
+          alert('Wrong PIN / ভুল পিন!');
         }
         setLoginPin('');
         setLoginTarget('');
@@ -105,47 +188,61 @@
         setPackages(packages.map(p => p.id === id ? {...p, price: Number(newPrice)} : p));
         setEditingPkg(null);
         setNewPrice('');
-        alert('প্যাকেজ মূল্য সফলভাবে আপডেট করা হয়েছে!');
+        alert('Package Updated Successfully!');
       };
 
       if (!authRole) {
         return (
-          <div className="min-h-screen bg-emerald-900 flex flex-col items-center justify-center p-4">
-            {/* Top Bar for Lang & Currency */}
+          <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+            {/* Global Language & All Currencies Top Bar */}
             <div className="absolute top-4 right-4 flex gap-2">
-              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-white text-xs p-1 rounded font-bold">
-                <option value="bn">বাংলা</option>
+              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-white text-xs p-1.5 rounded font-bold shadow">
+                <option value="bn">বাংলা (Bengali)</option>
                 <option value="en">English</option>
+                <option value="hi">हिन्दी (Hindi)</option>
+                <option value="ar">العربية (Arabic)</option>
+                <option value="es">Español (Spanish)</option>
+                <option value="fr">Français (French)</option>
+                <option value="zh">中文 (Chinese)</option>
               </select>
-              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="bg-white text-xs p-1 rounded font-bold">
+
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="bg-white text-xs p-1.5 rounded font-bold shadow">
                 <option value="BDT">BDT (৳)</option>
                 <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
                 <option value="INR">INR (₹)</option>
+                <option value="SAR">SAR (ر.س)</option>
+                <option value="AED">AED (د.إ)</option>
+                <option value="CAD">CAD (CA$)</option>
+                <option value="AUD">AUD (A$)</option>
+                <option value="JPY">JPY (¥)</option>
+                <option value="CNY">CNY (¥)</option>
               </select>
             </div>
 
             <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
               <div className="text-center">
-                <h1 className="text-lg font-bold text-emerald-900">{t[lang].title}</h1>
-                <p className="text-xs text-gray-500 mt-1">SaaS Multi-Currency & Multi-Language System</p>
+                <h1 className="text-lg font-bold text-slate-900">{t[lang] ? t[lang].title : t['en'].title}</h1>
+                <p className="text-xs text-gray-500 mt-1">Global Multi-Language & All Currencies System</p>
               </div>
 
               <div className="space-y-2">
                 <button onClick={() => setAuthRole('salesman')} className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow">
-                  🚚 {t[lang].loginSalesman}
+                  🚚 {t[lang] ? t[lang].salesman : t['en'].salesman}
                 </button>
                 <button onClick={() => setLoginTarget('company_admin')} className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow">
-                  🏢 {t[lang].loginCompany}
+                  🏢 {t[lang] ? t[lang].companyAdmin : t['en'].companyAdmin}
                 </button>
                 <button onClick={() => setLoginTarget('super_admin')} className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow">
-                  👑 {t[lang].loginSuper}
+                  👑 {t[lang] ? t[lang].superAdmin : t['en'].superAdmin}
                 </button>
               </div>
 
               {loginTarget && (
                 <div className="p-4 bg-gray-50 border rounded-xl space-y-3">
                   <p className="text-xs font-bold text-gray-700 text-center">
-                    {loginTarget === 'company_admin' ? 'কোম্পানি পিন (2234)' : 'সুপার অ্যাডমিন পিন (1123)'}
+                    {loginTarget === 'company_admin' ? 'Company PIN (2234)' : 'Super Admin PIN (1123)'}
                   </p>
                   <input 
                     type="password" 
@@ -169,12 +266,17 @@
       return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
           {/* Header */}
-          <header className="bg-emerald-800 text-white px-4 py-3 flex justify-between items-center shadow">
+          <header className="bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow">
             <h1 className="text-xs font-bold">{t[lang].title} ({authRole.toUpperCase()})</h1>
             <div className="flex items-center gap-2">
-              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-emerald-900 text-white text-xs p-1 rounded">
+              <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-slate-800 text-white text-xs p-1 rounded">
                 <option value="bn">বাংলা</option>
                 <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+                <option value="ar">العربية</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="zh">中文</option>
               </select>
               <button onClick={() => setAuthRole(null)} className="bg-red-600 text-white text-xs px-2.5 py-1 rounded font-bold">
                 {t[lang].logout}
@@ -182,7 +284,7 @@
             </div>
           </header>
 
-          {/* Super Admin Panel with Dynamic Package Management */}
+          {/* Super Admin Panel */}
           {authRole === 'super_admin' && (
             <main className="p-4 max-w-4xl mx-auto w-full space-y-4">
               <div className="bg-white p-4 rounded-xl shadow border space-y-3">
@@ -192,15 +294,15 @@
                     <div key={pkg.id} className="p-3 bg-gray-50 border rounded flex justify-between items-center">
                       <div>
                         <p className="font-bold text-gray-800">{pkg.name} ({pkg.duration})</p>
-                        <p className="text-emerald-700 font-bold">মূল্য: {currSymbol} {pkg.price}</p>
+                        <p className="text-emerald-700 font-bold">Price: {currency} {pkg.price}</p>
                       </div>
                       {editingPkg === pkg.id ? (
                         <div className="flex gap-1 items-center">
-                          <input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="নতুন মূল্য" className="w-20 p-1 border rounded text-xs" />
-                          <button onClick={() => handleUpdatePackage(pkg.id)} className="bg-emerald-600 text-white px-2 py-1 rounded font-bold">সেভ</button>
+                          <input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} placeholder="New Price" className="w-20 p-1 border rounded text-xs" />
+                          <button onClick={() => handleUpdatePackage(pkg.id)} className="bg-emerald-600 text-white px-2 py-1 rounded font-bold">Save</button>
                         </div>
                       ) : (
-                        <button onClick={() => { setEditingPkg(pkg.id); setNewPrice(pkg.price); }} className="bg-indigo-600 text-white px-3 py-1.5 rounded font-bold">এডিট মূল্য</button>
+                        <button onClick={() => { setEditingPkg(pkg.id); setNewPrice(pkg.price); }} className="bg-indigo-600 text-white px-3 py-1.5 rounded font-bold">Edit Price</button>
                       )}
                     </div>
                   ))}
@@ -213,8 +315,8 @@
           {authRole === 'company_admin' && (
             <main className="p-4 max-w-4xl mx-auto w-full space-y-4">
               <div className="bg-white p-4 rounded-xl shadow border">
-                <h2 className="font-bold text-gray-800 text-sm mb-2">🏢 কোম্পানি অ্যাডমিন ড্যাশবোর্ড</h2>
-                <p className="text-xs text-gray-600">সেলসম্যান রুট, স্টক এবং ক্যাশ কালেকশন মনিটর করুন।</p>
+                <h2 className="font-bold text-gray-800 text-sm mb-2">🏢 Company Admin Dashboard</h2>
+                <p className="text-xs text-gray-600">Manage Routes, Salesman Stock, and Cash Collection.</p>
               </div>
             </main>
           )}
@@ -234,23 +336,23 @@
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-white p-4 rounded-xl shadow border">
                         <p className="text-xs text-gray-500">{t[lang].totalReceivable}</p>
-                        <p className="text-base font-bold text-emerald-600">{currSymbol} 4,700</p>
+                        <p className="text-base font-bold text-emerald-600">{currency} 4,700</p>
                       </div>
                       <div className="bg-white p-4 rounded-xl shadow border">
                         <p className="text-xs text-gray-500">{t[lang].cashCollection}</p>
-                        <p className="text-base font-bold text-indigo-600">{currSymbol} 2,880</p>
+                        <p className="text-base font-bold text-indigo-600">{currency} 2,880</p>
                       </div>
                     </div>
 
                     <div className="bg-white p-4 rounded-xl shadow border space-y-3">
-                      <h3 className="font-bold text-gray-800 text-sm">📍 কাস্টমার চেক-ইন</h3>
+                      <h3 className="font-bold text-gray-800 text-sm">📍 Customer Check-In</h3>
                       {parties.map(p => (
                         <div key={p.id} className="p-3 bg-gray-50 border rounded flex justify-between items-center text-xs">
                           <div>
                             <p className="font-bold">{p.name}</p>
                             <p className="text-gray-500">{p.phone}</p>
                           </div>
-                          <button onClick={() => { setCheckedInShop(p.name); alert('সফল GPS চেক-ইন!'); }} className={`px-3 py-1.5 rounded font-bold ${checkedInShop === p.name ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`}>
+                          <button onClick={() => { setCheckedInShop(p.name); alert('GPS Check-In Successful!'); }} className={`px-3 py-1.5 rounded font-bold ${checkedInShop === p.name ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`}>
                             {checkedInShop === p.name ? t[lang].checkedIn : t[lang].gpsCheckIn}
                           </button>
                         </div>
@@ -261,11 +363,11 @@
 
                 {activeTab === 'parties' && (
                   <div className="bg-white p-4 rounded-xl shadow border space-y-3">
-                    <h3 className="font-bold text-gray-800 text-sm">পার্টি লেজার তালিকা</h3>
+                    <h3 className="font-bold text-gray-800 text-sm">Party Ledger</h3>
                     {parties.map(p => (
                       <div key={p.id} className="p-3 bg-gray-50 border rounded flex justify-between text-xs">
                         <span className="font-bold">{p.name}</span>
-                        <span className="text-amber-600 font-bold">{p.balance} ({currSymbol})</span>
+                        <span className="text-amber-600 font-bold">{p.balance} ({currency})</span>
                       </div>
                     ))}
                   </div>
@@ -274,13 +376,13 @@
                 {activeTab === 'sales' && (
                   <div className="bg-white p-4 rounded-xl shadow border flex flex-col justify-between">
                     <div>
-                      <h3 className="font-bold text-gray-800 text-sm mb-3">ইনভয়েস ও ব্লুটুথ প্রিন্ট</h3>
+                      <h3 className="font-bold text-gray-800 text-sm mb-3">Invoice & Thermal Print</h3>
                       <div className="p-3 bg-gray-50 border rounded text-xs mb-3 flex justify-between">
                         <span>Juice Box (2 Pcs)</span>
-                        <span className="font-bold">{currSymbol} 2,880</span>
+                        <span className="font-bold">{currency} 2,880</span>
                       </div>
                     </div>
-                    <button onClick={() => alert('ব্লুটুথ থার্মাল প্রিন্ট সফল!')} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow text-xs">
+                    <button onClick={() => alert('Bluetooth Thermal Print Executed!')} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl shadow text-xs">
                       🖨️ {t[lang].printMemo}
                     </button>
                   </div>
