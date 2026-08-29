@@ -31,6 +31,19 @@ jobs:
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir www
           npx cap add android || true
+
+          # Force fix for Kotlin duplicate class & version conflicts in build.gradle
+          echo "
+          android {
+              configurations.all {
+                  resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+                      if (details.requested.group == 'org.jetbrains.kotlin') {
+                          details.useVersion '1.9.24'
+                      }
+                  }
+              }
+          }" >> android/app/build.gradle
+
           npx cap sync android
 
       - name: Build Debug APK
