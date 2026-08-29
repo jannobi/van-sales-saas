@@ -1,4 +1,4 @@
-name: Build Android App Bundle (AAB)
+name: Build Android APK for Testing
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "Vyapar Van SaaS" "com.vyapar.vansaas" --web-dir www
           npx cap add android || true
-          
+
           # Force fix for Kotlin duplicate class conflicts in build.gradle
           echo "
           android {
@@ -47,13 +47,13 @@ jobs:
           npx cap sync android
 
       - name: Build Release APK
-      run: |
-        cd android
-        chmod +x gradlew
-        ./gradlew assembleRelease
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
 
-        - name: Upload Artifact APK
-         uses: actions/upload-artifact@v4
+      - name: Upload Artifact APK
+        uses: actions/upload-artifact@v4
         with:
-        name: play-store-release-apk
-        path: android/app/build/outputs/apk/release/app-release.apk
+          name: play-store-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
