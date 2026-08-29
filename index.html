@@ -39,19 +39,19 @@
       const [pPhone, setPPhone] = useState('');
       const [pAddress, setPAddress] = useState('');
       const [pAmount, setPAmount] = useState('');
-      const [pType, setPType] = useState('Receivable');
 
-      // Vyapar Core: Items & Inventory Stock
+      // Vyapar Core: Warehouse vs Van Stock Management
       const [items, setItems] = useState([
-        { id: 1, name: "ম্যাংগো জুস (কার্টন)", unit: "Carton", salePrice: 1440, purchasePrice: 1200, stock: 45 },
-        { id: 2, name: "এনার্জি ড্রিংকস (পিস)", unit: "Pcs", salePrice: 50, purchasePrice: 40, stock: 120 }
+        { id: 1, name: "ম্যাংগো জুস", unit: "Carton", salePrice: 1440, purchasePrice: 1200, vanStock: 45, mainGodownStock: 500 },
+        { id: 2, name: "এনার্জি ড্রিংকস", unit: "Pcs", salePrice: 50, purchasePrice: 40, vanStock: 120, mainGodownStock: 1000 }
       ]);
       const [showItemModal, setShowItemModal] = useState(false);
       const [iName, setIName] = useState('');
       const [iUnit, setIUnit] = useState('Pcs');
       const [iSale, setISale] = useState('');
       const [iPurchase, setIPurchase] = useState('');
-      const [iStock, setIStock] = useState('');
+      const [iGodownStock, setIGodownStock] = useState('');
+      const [iVanStock, setIVanStock] = useState('');
 
       // Sales & Billing Cart
       const [selectedPartyForSale, setSelectedPartyForSale] = useState('');
@@ -60,7 +60,7 @@
       const [itemQty, setItemQty] = useState(1);
       const [showPrintPreview, setShowPrintPreview] = useState(false);
 
-      // Extra Requirement: Package Selling / Subscription Management (Super Admin)
+      // Super Admin: Package Selling Management
       const [packages, setPackages] = useState([
         { id: 1, name: "স্ট্যান্ডার্ড মান্থলি ভ্যান প্যাকেজ", price: 1000, duration: "30 Days", status: "Active" },
         { id: 2, name: "ইন্টারপ্রাইজ ইয়ার্লি প্যাকেজ", price: 10000, duration: "365 Days", status: "Active" }
@@ -70,21 +70,20 @@
       const [pkgPrice, setPkgPrice] = useState('');
       const [pkgDuration, setPkgDuration] = useState('30 Days');
 
-      // Translations Dictionary
+      // Translations
       const t = {
         bn: {
           appTitle: "ভাইপার ভ্যান সেলস ও ইনভেন্টরি",
           dashboard: "ড্যাশবোর্ড",
           parties: "পার্টি (কাস্টমার)",
-          items: "স্টক ও আইটেম",
+          items: "স্টক ও গুডাউন",
           sales: "সেলস ও বিলিং",
-          packages: "প্যাকেজ ও সাবস্ক্রিপশন",
           receivable: "মোট পাবো (Receivable)",
-          payable: "মোট দেবো (Payable)",
-          totalStock: "মোট স্টক আইটেম",
+          totalStock: "ভ্যান স্টক আইটেম",
+          godownStock: "প্রধান গুডাউন স্টক",
           addParty: "+ নতুন পার্টি",
           addItem: "+ নতুন প্রোডাক্ট",
-          addPackage: "+ নতুন প্যাকেজ যোগ করুন",
+          addPackage: "+ নতুন প্যাকেজ",
           printInvoice: "ইনভয়েস প্রিন্ট করুন",
           confirmPrint: "প্রিন্ট নিশ্চিত করুন",
           cancel: "বাতিল",
@@ -94,12 +93,11 @@
           appTitle: "Vyapar Van Sales & Inventory",
           dashboard: "Dashboard",
           parties: "Parties",
-          items: "Items & Stock",
+          items: "Items & Godown",
           sales: "Sales & Billing",
-          packages: "Packages & Subs",
           receivable: "Total Receivable",
-          payable: "Total Payable",
-          totalStock: "Total Stock Items",
+          totalStock: "Van Stock Items",
+          godownStock: "Main Godown Stock",
           addParty: "+ Add Party",
           addItem: "+ Add Item",
           addPackage: "+ Add Package",
@@ -119,37 +117,48 @@
         else if (val === 'EUR') setCurrency('€');
       };
 
-      // Role Switcher with PIN check
       const requestRoleSwitch = (role) => {
         if (role === 'salesman') {
           setAuthRole('salesman');
+          setActiveTab('dashboard');
         } else {
           setTargetRole(role);
+          setPinInput('');
           setShowPinModal(true);
         }
       };
 
       const verifyPinAndSwitch = () => {
-        if ((targetRole === 'company_admin' && pinInput === '2234') || (targetRole === 'super_admin' && pinInput === '1123')) {
-          setAuthRole(targetRole);
+        if (targetRole === 'company_admin' && pinInput === '2234') {
+          setAuthRole('company_admin');
           setShowPinModal(false);
-          setPinInput('');
-          setTargetRole('');
+        } else if (targetRole === 'super_admin' && pinInput === '1123') {
+          setAuthRole('super_admin');
+          setShowPinModal(false);
         } else {
-          alert('ভুল পিন দিয়েছে! সঠিক পিন দিন (কোম্পানি: 2234, সুপার: 1123)');
+          alert('ভুল সিকিউরিটি পিন!');
+          setPinInput('');
         }
       };
 
       const handleSaveParty = () => {
         if (!pName) { alert('পার্টির নাম দিন'); return; }
-        setParties([...parties, { id: Date.now(), name: pName, phone: pPhone || 'N/A', address: pAddress || 'N/A', amount: Number(pAmount) || 0, type: pType }]);
+        setParties([...parties, { id: Date.now(), name: pName, phone: pPhone || 'N/A', address: pAddress || 'N/A', amount: Number(pAmount) || 0, type: "Receivable" }]);
         setPName(''); setPPhone(''); setPAddress(''); setPAmount(''); setShowPartyModal(false);
       };
 
       const handleSaveItem = () => {
         if (!iName) { alert('প্রোডাক্টের নাম দিন'); return; }
-        setItems([...items, { id: Date.now(), name: iName, unit: iUnit, salePrice: Number(iSale) || 0, purchasePrice: Number(iPurchase) || 0, stock: Number(iStock) || 0 }]);
-        setIName(''); setISale(''); setIPurchase(''); setIStock(''); setShowItemModal(false);
+        setItems([...items, { 
+          id: Date.now(), 
+          name: iName, 
+          unit: iUnit, 
+          salePrice: Number(iSale) || 0, 
+          purchasePrice: Number(iPurchase) || 0, 
+          vanStock: Number(iVanStock) || 0, 
+          mainGodownStock: Number(iGodownStock) || 0 
+        }]);
+        setIName(''); setISale(''); setIPurchase(''); setIVanStock(''); setIGodownStock(''); setShowItemModal(false);
       };
 
       const handleAddToCart = () => {
@@ -175,11 +184,11 @@
 
       return (
         <div className="min-h-screen flex flex-col max-w-md mx-auto bg-white shadow-2xl relative pb-16">
-          {/* Top Header with Multi-Language & Multi-Currency */}
+          {/* Top Header */}
           <header className="bg-emerald-800 text-white p-3 flex justify-between items-center shadow">
             <div>
               <h1 className="font-bold text-xs">{t[lang].appTitle}</h1>
-              <p className="text-[10px] text-emerald-200 uppercase tracking-wider">রোল: {authRole}</p>
+              <p className="text-[10px] text-emerald-200 uppercase tracking-wider">মোড: {authRole === 'salesman' ? 'সেলসম্যান' : authRole === 'company_admin' ? 'কোম্পানি অ্যাডমিন' : 'সুপার অ্যাডমিন'}</p>
             </div>
             <div className="flex gap-1.5 items-center">
               <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-emerald-900 text-white text-[10px] p-1 rounded font-bold outline-none">
@@ -195,18 +204,19 @@
             </div>
           </header>
 
-          {/* Role Switcher Bar */}
+          {/* Secure Panel Switcher */}
           <div className="bg-slate-900 text-white px-3 py-1.5 flex justify-between items-center text-[11px]">
-            <span>প্যানেল পরিবর্তন:</span>
+            <span>প্যানেল সুইচ:</span>
             <div className="flex gap-1">
-              <button onClick={() => requestRoleSwitch('salesman')} className={`px-2 py-0.5 rounded ${authRole === 'salesman' ? 'bg-emerald-600 font-bold' : 'bg-slate-700'}`}>সেলসম্যান</button>
-              <button onClick={() => requestRoleSwitch('company_admin')} className={`px-2 py-0.5 rounded ${authRole === 'company_admin' ? 'bg-emerald-600 font-bold' : 'bg-slate-700'}`}>কোম্পানি</button>
-              <button onClick={() => requestRoleSwitch('super_admin')} className={`px-2 py-0.5 rounded ${authRole === 'super_admin' ? 'bg-emerald-600 font-bold' : 'bg-slate-700'}`}>সুপার</button>
+              <button onClick={() => requestRoleSwitch('salesman')} className={`px-2.5 py-0.5 rounded ${authRole === 'salesman' ? 'bg-emerald-600 font-bold' : 'bg-slate-700'}`}>সেলসম্যান</button>
+              <button onClick={() => requestRoleSwitch('company_admin')} className={`px-2.5 py-0.5 rounded ${authRole === 'company_admin' ? 'bg-emerald-600 font-bold' : 'bg-slate-700'}`}>কোম্পানি</button>
+              <button onClick={() => requestRoleSwitch('super_admin')} className={`px-2.5 py-0.5 rounded ${authRole === 'super_admin' ? 'bg-emerald-600 font-bold' : 'bg-slate-700'}`}>সুপার</button>
             </div>
           </div>
 
           {/* Main Body Content */}
           <main className="flex-1 p-3 overflow-y-auto space-y-3">
+            {/* 1. SALESMAN PANEL */}
             {authRole === 'salesman' && (
               <>
                 {activeTab === 'dashboard' && (
@@ -218,7 +228,7 @@
                       </div>
                       <div className="bg-blue-50 border border-blue-200 p-2.5 rounded-xl">
                         <p className="text-[11px] text-blue-700 font-bold">{t[lang].totalStock}</p>
-                        <p className="text-base font-bold text-blue-900">{items.reduce((acc, i) => acc + i.stock, 0)} পিস</p>
+                        <p className="text-base font-bold text-blue-900">{items.reduce((acc, i) => acc + i.vanStock, 0)} পিস</p>
                       </div>
                     </div>
                     <div className="bg-gray-50 border p-3 rounded-xl space-y-2">
@@ -257,16 +267,16 @@
                 {activeTab === 'items' && (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <h2 className="font-bold text-xs text-gray-800">প্রোডাক্ট ও ভ্যান স্টক</h2>
+                      <h2 className="font-bold text-xs text-gray-800">ভ্যান স্টক তালিকা</h2>
                       <button onClick={() => setShowItemModal(true)} className="bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow">{t[lang].addItem}</button>
                     </div>
                     {items.map(item => (
                       <div key={item.id} className="p-2.5 bg-gray-50 border rounded-xl flex justify-between items-center text-xs">
                         <div>
                           <p className="font-bold text-gray-900">{item.name} ({item.unit})</p>
-                          <p className="text-[10px] text-gray-500">ক্রয়: {currencySymbol}{item.purchasePrice} | বিক্রি: {currencySymbol}{item.salePrice}</p>
+                          <p className="text-[10px] text-gray-500">মূল্য: {currencySymbol}{item.salePrice}</p>
                         </div>
-                        <span className="font-bold text-indigo-700">স্টক: {item.stock}</span>
+                        <span className="font-bold text-indigo-700">ভ্যান স্টক: {item.vanStock}</span>
                       </div>
                     ))}
                   </div>
@@ -282,7 +292,7 @@
                     <div className="flex gap-1.5">
                       <select value={selectedItemId} onChange={(e) => setSelectedItemId(e.target.value)} className="flex-1 p-2 border rounded-xl bg-gray-50 text-xs">
                         <option value="">-- প্রোডাক্ট সিলেক্ট করুন --</option>
-                        {items.map(i => <option key={i.id} value={i.id}>{i.name} (স্টক: {i.stock})</option>)}
+                        {items.map(i => <option key={i.id} value={i.id}>{i.name} (স্টক: {i.vanStock})</option>)}
                       </select>
                       <input type="number" min="1" value={itemQty} onChange={(e) => setItemQty(e.target.value)} className="w-14 p-2 border rounded-xl text-center" />
                       <button onClick={handleAddToCart} className="bg-emerald-600 text-white px-3 py-2 rounded-xl font-bold">যোগ</button>
@@ -312,31 +322,72 @@
               </>
             )}
 
+            {/* 2. COMPANY ADMIN PANEL (Main Godown Stock, Salesman Tracking, Reports) */}
             {authRole === 'company_admin' && (
-              <div className="bg-white p-3 rounded-xl border space-y-2 text-xs">
-                <h2 className="font-bold text-gray-800 text-sm">🏢 কোম্পানি অ্যাডমিন প্যানেল</h2>
-                <p className="text-gray-600">সেলসম্যান রুট ট্র্যাকিং, ডেইলি ক্যাশ কালেকশন ও স্টক অডিট রিপোর্ট ম্যানেজমেন্ট।</p>
-                <div className="p-2 bg-emerald-50 rounded border text-emerald-800 font-bold">মোট ক্যাশ সংগ্রহ আজ: {currencySymbol} 14,500</div>
+              <div className="space-y-3 text-xs">
+                <div className="bg-white p-3.5 rounded-xl border space-y-1.5 shadow-sm">
+                  <h2 className="font-bold text-gray-900 text-sm">🏢 কোম্পানি অ্যাডমিন প্যানেল (মেইন গুডাউন ও স্টক মনিটরিং)</h2>
+                  <p className="text-gray-500">প্রধান গুডাউনের স্টক লেভেল, ভ্যানে স্টক ট্রান্সফার এবং সেলসম্যানদের দৈনিক পারফরম্যান্স অডিট।</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-emerald-50 border p-3 rounded-xl">
+                    <p className="text-[11px] text-emerald-700 font-bold">আজকের ক্যাশ কালেকশন</p>
+                    <p className="text-base font-bold text-emerald-900">{currencySymbol} 14,500</p>
+                  </div>
+                  <div className="bg-blue-50 border p-3 rounded-xl">
+                    <p className="text-[11px] text-blue-700 font-bold">মোট গুডাউন স্টক</p>
+                    <p className="text-base font-bold text-blue-900">{items.reduce((acc, i) => acc + i.mainGodownStock, 0)} পিস</p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border space-y-2">
+                  <h3 className="font-bold text-gray-700">প্রধান গুডাউন ও ভ্যান স্টক রিপোর্ট:</h3>
+                  {items.map(item => (
+                    <div key={item.id} className="p-2.5 bg-gray-50 rounded-xl border flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-gray-900">{item.name}</p>
+                        <p className="text-[10px] text-gray-500">ক্রয়: {currencySymbol}{item.purchasePrice} | বিক্রি: {currencySymbol}{item.salePrice}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-blue-700 text-[11px]">গুডাউন: {item.mainGodownStock}</p>
+                        <p className="font-bold text-emerald-700 text-[11px]">ভ্যান: {item.vanStock}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border space-y-2">
+                  <h3 className="font-bold text-gray-700">সেলসম্যান রুট শিডিউল ও ট্র্যাকিং:</h3>
+                  <div className="p-2.5 bg-gray-50 rounded-xl border flex justify-between items-center">
+                    <div>
+                      <p className="font-bold">সাভার রুট (সেলসম্যান: রহিম)</p>
+                      <p className="text-[10px] text-gray-500">স্ট্যাটাস: লাইভ রুট ট্র্যাকিং চলছে</p>
+                    </div>
+                    <span className="font-bold text-emerald-600">৳ ৫,২০০ আদায়</span>
+                  </div>
+                </div>
               </div>
             )}
 
+            {/* 3. SUPER ADMIN PANEL (Package Selling Management) */}
             {authRole === 'super_admin' && (
               <div className="space-y-3 text-xs">
-                <div className="bg-white p-3 rounded-xl border space-y-2">
+                <div className="bg-white p-3.5 rounded-xl border space-y-1.5 shadow-sm">
                   <div className="flex justify-between items-center">
-                    <h2 className="font-bold text-gray-800 text-sm">👑 সুপার অ্যাডমিন ও প্যাকেজ কন্ট্রোল</h2>
+                    <h2 className="font-bold text-gray-900 text-sm">👑 সুপার অ্যাডমিন প্যানেল (প্যাকেজ সেলস কন্ট্রোল)</h2>
                     <button onClick={() => setShowPkgModal(true)} className="bg-amber-600 text-white px-2.5 py-1.5 rounded-lg font-bold shadow">{t[lang].addPackage}</button>
                   </div>
-                  <p className="text-gray-600">ক্লায়েন্ট সাবস্ক্রিপশন প্যাকেজ ম্যানেজমেন্ট এবং গ্লোবাল অ্যাপ লাইসেন্সিং কন্ট্রোল।</p>
+                  <p className="text-gray-500">সফটওয়্যার ক্লায়েন্টদের জন্য নতুন সাবস্ক্রিপশন প্যাকেজ তৈরি, প্রাইসিং এবং লাইসেন্স কন্ট্রোল।</p>
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="font-bold text-gray-700">বর্তমান প্যাকেজসমূহ:</h3>
+                  <h3 className="font-bold text-gray-700">সক্রিয় প্যাকেজ ও সাবস্ক্রিপশন লিস্ট:</h3>
                   {packages.map(pkg => (
-                    <div key={pkg.id} className="p-2.5 bg-white border rounded-xl flex justify-between items-center shadow-sm">
+                    <div key={pkg.id} className="p-3 bg-white border rounded-xl flex justify-between items-center shadow-sm">
                       <div>
-                        <p className="font-bold">{pkg.name}</p>
-                        <p className="text-[10px] text-gray-500">মেয়াদ: {pkg.duration}</p>
+                        <p className="font-bold text-gray-900">{pkg.name}</p>
+                        <p className="text-[10px] text-gray-500">মেয়াদ: {pkg.duration} | স্ট্যাটাস: {pkg.status}</p>
                       </div>
                       <span className="font-bold text-amber-700">{currencySymbol} {pkg.price}</span>
                     </div>
@@ -349,31 +400,39 @@
           {/* Bottom Nav Bar (Salesman Mode) */}
           {authRole === 'salesman' && (
             <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t flex justify-around p-2 text-[10px] font-bold text-gray-600 shadow-lg">
-              <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center ${activeTab === 'dashboard' ? 'text-emerald-700' : ''}`}>ড্যাশবোর্ড</button>
-              <button onClick={() => setActiveTab('parties')} className={`flex flex-col items-center ${activeTab === 'parties' ? 'text-emerald-700' : ''}`}>পার্টি</button>
-              <button onClick={() => setActiveTab('items')} className={`flex flex-col items-center ${activeTab === 'items' ? 'text-emerald-700' : ''}`}>স্টক</button>
-              <button onClick={() => setActiveTab('sales')} className={`flex flex-col items-center ${activeTab === 'sales' ? 'text-emerald-700' : ''}`}>সেলস বিলিং</button>
+              <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center ${activeTab === 'dashboard' ? 'text-emerald-700' : ''}`}>{t[lang].dashboard}</button>
+              <button onClick={() => setActiveTab('parties')} className={`flex flex-col items-center ${activeTab === 'parties' ? 'text-emerald-700' : ''}`}>{t[lang].parties}</button>
+              <button onClick={() => setActiveTab('items')} className={`flex flex-col items-center ${activeTab === 'items' ? 'text-emerald-700' : ''}`}>{t[lang].items}</button>
+              <button onClick={() => setActiveTab('sales')} className={`flex flex-col items-center ${activeTab === 'sales' ? 'text-emerald-700' : ''}`}>{t[lang].sales}</button>
             </nav>
           )}
 
-          {/* PIN Verification Modal */}
+          {/* Secure PIN Prompt Modal */}
           {showPinModal && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-2xl text-xs">
-                <h3 className="font-bold text-gray-900 text-sm text-center">সিকিউরিটি পিন দিন</h3>
-                <p className="text-[11px] text-gray-500 text-center">
-                  {targetRole === 'company_admin' ? 'কোম্পানি পিন দিন (ডফল্ট: 2234)' : 'সুপার পিন দিন (ডফল্ট: 1123)'}
-                </p>
-                <input type="password" maxLength={4} value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder="••••" className="w-full text-center text-lg py-2 border rounded-xl outline-none tracking-widest font-bold" />
+                <div className="text-center space-y-1">
+                  <h3 className="font-bold text-gray-900 text-sm">সিকিউরিটি পিন দিন</h3>
+                  <p className="text-[11px] text-gray-500">অনুমোদিত পিন নম্বরটি প্রবেশ করান</p>
+                </div>
+                <input 
+                  type="password" 
+                  maxLength={4} 
+                  value={pinInput} 
+                  onChange={(e) => setPinInput(e.target.value)} 
+                  placeholder="••••" 
+                  className="w-full text-center text-xl py-2.5 border rounded-xl outline-none tracking-widest font-bold bg-gray-50" 
+                  autoFocus
+                />
                 <div className="flex gap-2 pt-1">
-                  <button onClick={() => setShowPinModal(false)} className="w-1/2 py-2 bg-gray-200 rounded-xl font-bold">{t[lang].cancel}</button>
-                  <button onClick={verifyPinAndSwitch} className="w-1/2 py-2 bg-emerald-600 text-white rounded-xl font-bold">প্রবেশ</button>
+                  <button onClick={() => setShowPinModal(false)} className="w-1/2 py-2.5 bg-gray-200 rounded-xl font-bold">{t[lang].cancel}</button>
+                  <button onClick={verifyPinAndSwitch} className="w-1/2 py-2.5 bg-emerald-600 text-white rounded-xl font-bold">প্রবেশ করুন</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Manual Thermal Print Preview Modal */}
+          {/* Manual Print Preview Modal */}
           {showPrintPreview && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl p-4 max-w-xs w-full space-y-3 shadow-2xl text-xs">
@@ -418,11 +477,11 @@
             </div>
           )}
 
-          {/* Add Item Modal */}
+          {/* Add Item & Stock Modal */}
           {showItemModal && (
             <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl p-4 max-w-xs w-full space-y-2.5 shadow-2xl text-xs">
-                <h3 className="font-bold text-sm">নতুন প্রোডাক্ট ও স্টক</h3>
+                <h3 className="font-bold text-sm">নতুন প্রোডাক্ট, গুডাউন ও ভ্যান স্টক</h3>
                 <input type="text" placeholder="প্রোডাক্টের নাম" value={iName} onChange={(e) => setIName(e.target.value)} className="w-full p-2 border rounded-xl" />
                 <select value={iUnit} onChange={(e) => setIUnit(e.target.value)} className="w-full p-2 border rounded-xl bg-gray-50">
                   <option value="Pcs">পিস (Pcs)</option>
@@ -431,7 +490,8 @@
                 </select>
                 <input type="number" placeholder="ক্রয় মূল্য" value={iPurchase} onChange={(e) => setIPurchase(e.target.value)} className="w-full p-2 border rounded-xl" />
                 <input type="number" placeholder="বিক্রয় মূল্য" value={iSale} onChange={(e) => setISale(e.target.value)} className="w-full p-2 border rounded-xl" />
-                <input type="number" placeholder="স্টক পরিমাণ" value={iStock} onChange={(e) => setIStock(e.target.value)} className="w-full p-2 border rounded-xl" />
+                <input type="number" placeholder="প্রধান গুডাউন স্টক (Godown)" value={iGodownStock} onChange={(e) => setIGodownStock(e.target.value)} className="w-full p-2 border rounded-xl" />
+                <input type="number" placeholder="ভ্যান স্টক পরিমাণ (Van)" value={iVanStock} onChange={(e) => setIVanStock(e.target.value)} className="w-full p-2 border rounded-xl" />
                 <div className="flex gap-2 pt-1">
                   <button onClick={() => setShowItemModal(false)} className="w-1/2 py-2 bg-gray-200 rounded-xl font-bold">{t[lang].cancel}</button>
                   <button onClick={handleSaveItem} className="w-1/2 py-2 bg-emerald-600 text-white rounded-xl font-bold">{t[lang].save}</button>
